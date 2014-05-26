@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
  ForceSensor<OptoForceSensor> * forceSensorLF_ = new ForceSensor<OptoForceSensor>();
  //ForceSensor<OptoForceSensor> * forceSensorRF_ = new ForceSensor<OptoForceSensor>();
 
- *forceSensorLF_ = *(new OptoForceSensor(ifaces_USB[0], baudrate));
+ *forceSensorLF_ = *(new OptoForceSensor(ifaces_USB[3], baudrate));
  //*forceSensorRF_ = *(new OptoForceSensor(ifaces_USB[1], baudrate));
 
   forceSensorVector_+=forceSensorLF_;  
