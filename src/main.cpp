@@ -16,13 +16,20 @@ int main(int argc, char *argv[])
  ForceSensorVector forceSensorVector_;
 
  ForceSensor<OptoForceSensor> * forceSensorLF_ = new ForceSensor<OptoForceSensor>();
- //ForceSensor<OptoForceSensor> * forceSensorRF_ = new ForceSensor<OptoForceSensor>();
+ ForceSensor<OptoForceSensor> * forceSensorRF_ = new ForceSensor<OptoForceSensor>();
+ ForceSensor<OptoForceSensor> * forceSensorLH_ = new ForceSensor<OptoForceSensor>();
+ ForceSensor<OptoForceSensor> * forceSensorRH_ = new ForceSensor<OptoForceSensor>();
 
- *forceSensorLF_ = *(new OptoForceSensor(ifaces_USB[3], baudrate));
- //*forceSensorRF_ = *(new OptoForceSensor(ifaces_USB[1], baudrate));
+ *forceSensorLF_ = *(new OptoForceSensor(ifaces_USB[0], baudrate));
+ *forceSensorRF_ = *(new OptoForceSensor(ifaces_USB[1], baudrate));
+ *forceSensorLH_ = *(new OptoForceSensor(ifaces_USB[2], baudrate));
+ *forceSensorRH_ = *(new OptoForceSensor(ifaces_USB[3], baudrate));
+
 
   forceSensorVector_+=forceSensorLF_;  
-//  forceSensorVector_+=forceSensorRF_;
+ forceSensorVector_+=forceSensorRF_;
+ forceSensorVector_+=forceSensorLH_;
+ forceSensorVector_+=forceSensorRH_;
 
  std::cout << "Size of the sensor vector: " << forceSensorVector_.size() << std::endl;
 
@@ -30,10 +37,11 @@ int main(int argc, char *argv[])
    forceSensorVector_[i]->init();
 
    //As an example: Set the force sensor to zero and store the offset:
-   //forceSensorVector_[i]->storeSensorOffset("teest",100); //Filename, number of elements for the filter
-   //forceSensorVector_[i]->loadSensorOffset("teest"); //Filename, number of elements for the filter
+   //  forceSensorVector_[i]->storeSensorOffset("test",100); //Filename, number of elements for the filter
+   //forceSensorVector_[i]->loadSensorOffset("test"); //Filename, number of elements for the filter
 
  }
+
 
 
 

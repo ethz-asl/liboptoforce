@@ -10,10 +10,15 @@
 namespace sp {
 
 struct read_package {
+
+ /* Raw data */
   uint16_t s1;
   uint16_t s2;
   uint16_t s3;
   uint16_t s4;
+
+
+
   uint16_t temp;
 
   read_package (uint16_t a, uint16_t b, uint16_t c, uint16_t d)
@@ -30,11 +35,32 @@ struct read_package {
   }
 };
 struct display_package {
+
+
   int s1;
   int s2;
   int s3;
   int s4;
+/* Compensated raw datas */
+  int s1c;
+  int s2c;
+  int s3c;
+  int s4c;
+
+ /* Force vectors */
+  int x;
+  int y;
+  int z;
+
+  /* Compensated force vectors */
+  int xc;
+  int yc;
+  int zc;
+
+
   int temp;
+
+
 
   display_package (int a, int b, int c, int d)
       : s1(a), s2(b), s3(c), s4(d), temp(0) { }
