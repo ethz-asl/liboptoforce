@@ -110,6 +110,8 @@ int state_machine::writeConfiguration(int frequency_hz_sampling, int frequency_h
 		break;
 	} //End switch filter
 
+
+	//Depricated
 	switch(flag_raw) {
 	case 1:
 		//Bit 0 remains 0
@@ -146,6 +148,7 @@ void state_machine::read(std::deque<sp::display_package>& packs, const sp::displ
 
 	uint16_t actual;
 	uint8_t checksum;
+	uint16_t checksum2;
 	sp::display_package pack;
 
 	char * data_in;
@@ -159,34 +162,65 @@ void state_machine::read(std::deque<sp::display_package>& packs, const sp::displ
 	}
 
 	int i;
+
+	
+
+	//States, compared to new version:
+	//  Old:   New:
+	//  1      first_check
+	//  2      second_check
+	// 10     _66_Start
+
+
 	for(i = 0; i <  nr_bytes; ++i) {
 		c = data_in[i]; // the actual byte in processing
+
 		switch (state) { // branch with actual state in fsm
-		case 1:
-			if (c == 55) state = 2; // first checker byte
-			else         state = 1; // restart this state
+	
+
+		case first_check: //1:
+			if (c == 55) state = second_check; // first checker byte
+			else         state = first_check; // restart this state
 			break;
-		case 2:
+		case second_check:
 			if (c == 66) { // second checker byte for .66 version
-				state = 10; // jump the .66 version reading
+			  state = _66_Start; //v<1.1: 10; // jump the .66 version reading
 				vs = _66;
+
+				// pack[0].vs=_66;
+				// virtualSensor=false;
+				// sensorSize=1;
 			} else if (c == 67) { // seconf checker byte for .67 version
-				state = 20; // jump the .67 version reading
+				state = _67_Start; // jump the .67 version reading
+
+
+
 				vs = _67;
-			} else
+			}  else if (c == 68) { // seconf checker byte for .67 version
+				state = _68_Start; // jump the .67 version reading
+				vs = _68;
+
+				} 
+			else
 				state = 1; // restart the fsm
 			break;
 
 			/* .66 version package */
-		case 10:
+			/*
+		case _66_Start: //10:
 			if (!first_valid) { // this is a first valid package
 				first_valid = true;
 			}
-			actual = ((uint16_t)c) * 256;
-			state = 11;
+			state =  state = _66_S1H;
+
+		case _66_S1H:
+			actual = ((uint16_t)c) * 256; // read a one byte - read the high part of first data
+			state = _66_S1L; //11; next state
 			break;
-		case 11:
-			actual += (uint16_t)c;
+		case _66_S1L: //11:
+	
+
+			actual += (uint16_t)c; // read a one byte - read the low part of first data - and add to high part
 			pack.s1 = ((unsigned int)actual)+UINT_MAX+1 - offset.s1;
 			state = 12;
 			break;
@@ -222,75 +256,288 @@ void state_machine::read(std::deque<sp::display_package>& packs, const sp::displ
 			break;
 
 
-
+			*/
 
 			/* .67 version package */
-		case 20:
+			
+		case  _67_Start: //20:
 			if (!first_valid) { // this is a first valid package
 				//   emit first_valid_read(); // first valid event
 				first_valid = true;
 			}
-			state = 21;
+			state = _67_Config;
+		case _67_Config:	
+			//			state = 21;
 			checksum = c;
+			state = _67_I1H; //state = 21;
 			break;
 
-		case 21:
+		case _67_I1H:  //21:
 			actual = ((uint16_t)c) * 256;
-			state = 22;
+			state = _67_I1L; // next state... //22;
 			break;
-		case 22:
+		case  _67_I1L: //22:
 			actual += (uint16_t)c;
 			pack.s1 = ((unsigned int)actual)+UINT_MAX+1 - offset.s1;
-			state = 23;
+			state = _67_I2H; //23;
 			checksum += actual;
 			break;
-		case 23:
+		case _67_I2H:  //23:
 			actual = ((uint16_t)c) * 256;
-			state = 24;
+			state = _67_I2L; //24;
 			break;
-		case 24:
+		case _67_I2L: //24:
 			actual += (uint16_t)c;
 			pack.s2 = ((unsigned int)actual)+UINT_MAX+1 - offset.s2;
-			state = 25;
+			state =  _67_I3H; //25;
 			checksum += actual;
 			break;
-		case 25:
+		case  _67_I3H: //25:
 			actual = ((uint16_t)c) * 256;
-			state = 26;
+			state = _67_I3L; // 26;
 			break;
-		case 26:
+		case _67_I3L://26:
 			actual += (uint16_t)c;
 			pack.s3 = ((unsigned int)actual)+UINT_MAX+1 - offset.s3;
-			state = 27;
+			state =  _67_I4H; //27;
 			checksum += actual;
 			break;
-		case 27:
+		case _67_I4H: //27:
 			actual = ((uint16_t)c) * 256;
-			state = 28;
+			state = _67_I4L; //28;
 			break;
-		case 28:
+		case _67_I4L: //28:
 			actual += (uint16_t)c;
 			pack.s4 = ((unsigned int)actual)+UINT_MAX+1 - offset.s4;
-			state = 29;
+			state =  _67_TH; //29;
 			checksum += actual;
 			break;
-		case 29:
+		case  _67_TH: //29:
 			actual = ((uint16_t)c) * 256;
-			state = 30;
+			state = _67_TL; //30;
 			break;
-		case 30:
+		case _67_TL: //30:
 			actual += (uint16_t)c;
 			pack.temp = ((unsigned int)actual)+UINT_MAX+1;
-			state = 31;
+			state = _67_Checksum;; //31;
 			checksum += actual;
 			break;
-		case 31:
+		case _67_Checksum: //31:
 			if (checksum == c) {
 				packs.push_back(pack);
 			}
 			pack = 0;
-			state = 1;
+			state =  _67_Start; //1;
 			break;
+
+			
+
+ /* .68 version package */
+			// New package that was added in API Version 1.1
+            case _68_Start:
+
+	      //   cout << "Starting to decode 68er pack" << endl;
+
+                if (!first_valid) {
+                    first_valid = true;
+		    //                   first_valid_state = true;
+		    //   sensors.append(OptoSensor());
+                }
+                state = _68_Config;
+            case _68_Config:
+	      //    last_conf = SensorConfig::from_uint8_t(c);
+              //  pack[0].config=last_conf;
+                checksum2 = c;
+                state = _68_FXH;
+                break;
+            case _68_FXH:
+                actual = ((uint16_t)c) * 256;
+		checksum2 += c;
+                state = _68_FXL;
+                break;
+            case _68_FXL:
+                actual += (uint16_t)c;
+		pack.x = ((int16_t)actual);
+		//        pack[0].x = ((int16_t)actual);
+                checksum2 += c;
+                state = _68_FYH;
+                break;
+            case _68_FYH:
+                actual = ((uint16_t)c) * 256;
+                checksum2 += c;
+                state = _68_FYL;
+                break;
+            case _68_FYL:
+                actual += (uint16_t)c;
+		  pack.y = ((int16_t)actual);
+		//       pack[0].y = ((int16_t)actual);
+                checksum2 += c;
+                state = _68_FZH;
+                break;
+            case _68_FZH:
+                actual = ((uint16_t)c) * 256;
+                checksum2 += c;
+                state = _68_FZL;
+                break;
+            case _68_FZL:
+                actual += (uint16_t)c;
+		 pack.z = ((unsigned int)actual)+UINT_MAX+1;
+		//        pack[0].z = ((unsigned int)actual)+UINT_MAX+1;
+                state = _68_TH;
+                checksum2 += c;
+                break;
+
+            case _68_TH:
+                actual = ((uint16_t)c) * 256;
+                checksum2 += c;
+                state = _68_TL;
+                break;
+            case _68_TL:
+                actual += (uint16_t)c;
+		//      pack[0].temp=(((unsigned int)actual)+UINT_MAX+1);
+                checksum2 += c;
+                state = _68_S1H;
+                break;
+
+            case _68_S1H:
+                actual = ((uint16_t)c) * 256;
+                checksum2 += (uint16_t)c;
+                state = _68_S1L;
+                break;
+            case _68_S1L:
+                actual += (uint16_t)c;
+		
+		pack.s1 = ((unsigned int)actual)+UINT_MAX+1 - offset.s1;
+		//	cout << "pack.s1: " << pack.s1 << endl;
+		//       pack[0].s1 = ((unsigned int)actual)+UINT_MAX+1;
+                checksum2 += c;
+                state = _68_S2H;
+                break;
+            case _68_S2H:
+                actual = ((uint16_t)c) * 256;
+                checksum2 += c;
+                state = _68_S2L;
+                break;
+            case _68_S2L:
+                actual += (uint16_t)c;
+		pack.s2 = (((unsigned int)actual)+UINT_MAX+1) - offset.s2; 
+		//       pack[0].s2=(((unsigned int)actual)+UINT_MAX+1);
+                checksum2 += c;
+                state = _68_S3H;
+                break;
+            case _68_S3H:
+                actual = ((uint16_t)c) * 256;
+                checksum2 += c;
+                state = _68_S3L;
+                break;
+            case _68_S3L:
+                actual += (uint16_t)c;
+		pack.s3 = (((unsigned int)actual)+UINT_MAX+1) - offset.s3; 
+		//        pack[0].s3=(((unsigned int)actual)+UINT_MAX+1);
+                checksum2 += c;
+                state = _68_S4H;
+                break;
+            case _68_S4H:
+                actual = ((uint16_t)c) * 256;
+                checksum2 += c;
+                state = _68_S4L;
+                break;
+            case _68_S4L:
+                actual += (uint16_t)c;
+		pack.s4 = (((unsigned int)actual)+UINT_MAX+1) - offset.s4; 
+		//        pack[0].s4=(((unsigned int)actual)+UINT_MAX+1);
+		packs.push_back(pack);
+		//			cout << "test2" << endl;
+		pack = 0;
+
+                checksum2 += c;
+                state = _68_S1TH;
+                break;
+            case _68_S1TH:
+                actual = ((uint16_t)c) * 256;
+                checksum2 += c;
+                state = _68_S1TL;
+                break;
+            case _68_S1TL:
+                actual += (uint16_t)c;
+		pack.s1c=(((unsigned int)actual)+UINT_MAX+1);	
+		//        pack[0].s1c=(((unsigned int)actual)+UINT_MAX+1);
+                checksum2 += c;
+                state = _68_S2TH;
+                break;
+            case _68_S2TH:
+                actual = ((uint16_t)c) * 256;
+                checksum2 += c;
+                state = _68_S2TL;
+                break;
+            case _68_S2TL:
+                actual += (uint16_t)c;
+	
+		  pack.s2c=(((unsigned int)actual)+UINT_MAX+1);
+		//      pack[0].s2c=(((unsigned int)actual)+UINT_MAX+1);
+                checksum2 += c;
+                state = _68_S3TH;
+                break;
+            case _68_S3TH:
+                actual = ((uint16_t)c) * 256;
+                checksum2 += c;
+                state = _68_S3TL;
+                break;
+            case _68_S3TL:
+                actual += (uint16_t)c;
+		pack.s3c=(((unsigned int)actual)+UINT_MAX+1);
+		//        pack[0].s3c=(((unsigned int)actual)+UINT_MAX+1);
+                checksum2 += c;
+                state = _68_S4TH;
+                break;
+            case _68_S4TH:
+                actual = ((uint16_t)c) * 256;
+                checksum2 += c;
+                state = _68_S4TL;
+                break;
+            case _68_S4TL:
+                actual += (uint16_t)c;
+		 pack.s4c=(((unsigned int)actual)+UINT_MAX+1);
+		//        pack[0].s4c=(((unsigned int)actual)+UINT_MAX+1);
+                checksum2 += c;
+                state = _68_ChecksumH;
+                break;
+            case _68_ChecksumH:
+                actual = ((uint16_t)c) * 256;
+                state = _68_ChecksumL;
+                break;
+            case _68_ChecksumL:
+                actual += (uint16_t)c;
+                //qDebug()<<"chk"<<checksum2<<"chkact"<<actual;
+
+
+		//ToDo: Add this check
+		/*
+                if (checksum2 == actual) { // check the checksum
+		  //          pack[0].saveInconsistent();
+		  //           pack[0].setInvariant(sensors[0].offset); // invariant calculate with offset
+		  //           packs[0].push_back(pack[0]);
+		  if (!checksum_state) {
+		    checksum_state = true;
+		  }
+                } else {
+		  if (checksum_state) {
+		    checksum_state = false;
+		  }
+                }
+		*/
+
+
+		//                pack[0] = 0;
+                state = first_check; // restart the fsm
+                break;
+
+
+
+
+
+
+
 		}
 	}
 }

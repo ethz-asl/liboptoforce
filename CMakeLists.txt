@@ -1,44 +1,45 @@
-cmake_minimum_required (VERSION 2.6)  
 
-#SET(CMAKE_CXX_FLAGS "-std=c++0x")
-#ADD_DEFINITIONS( -ggdb -Wall -DLINUX -DANSI_DECLARATORS)
+cmake_minimum_required(VERSION 2.8)
 
+PROJECT(optoforceInterface)
 
-######################
-### SUBDIRECTORIES ###
-######################
+ADD_DEFINITIONS( -ggdb -Wall -DLINUX -DANSI_DECLARATORS)
 
-################
-### INCLUDES ###
-################
-set(CAN_INCL ${CAN_INCL} 
-	${CMAKE_CURRENT_SOURCE_DIR}/src 
-PARENT_SCOPE)
+INCLUDE_DIRECTORIES(
+  /usr/local/include
+  )
 
-###############
-### SOURCES ###
-###############
-set(CAN_SRCS ${CAN_SRCS} 
-	${CMAKE_CURRENT_SOURCE_DIR}/src/ForceSensorVector.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/src/ForceSensorBase.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/src/SerialDevice.cpp
-	${CMAKE_CURRENT_SOURCE_DIR}/src/state_machine_wo_qt.cpp #Optoforce file, replaced QT dependence	
-	${CMAKE_CURRENT_SOURCE_DIR}/src/optoforce_parameters.cpp
-PARENT_SCOPE)
+LINK_DIRECTORIES(
+  /usr/local/lib
+  )
 
 
-########################
-### LINK DIRECTORIES ###
-########################
-set(CAN_LINKDIRS ${CAN_LINKDIRS} 
+#Find boost
 
-PARENT_SCOPE)
+find_package(Boost REQUIRED COMPONENTS system thread )
+if ( Boost_FOUND )
+  include_directories(${Boost_INCLUDE_DIRS})
+  link_directories(${Boost_LIBRARY_DIRS})
+  add_definitions(${Boost_LIB_DIAGNOSTIC_DEFINITIONS})
+  # Remember to include ${Boost_LIBRARIES} in the target_link_libraries() statement
+endif ( Boost_FOUND )
 
 
-#################
-### LIBRARIES ###
-#################
-set(CAN_LIBS ${CAN_LIBS} 
-	SM boost_system boost_thread 
-PARENT_SCOPE)
- 
+#set the default path for built executables to the "bin" directory
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+include_directories (${CMAKE_CURRENT_BINARY_DIR})
+
+add_executable(optoforceInterface
+  src/main.cpp
+  src/ForceSensorVector.cpp
+  src/ForceSensorBase.cpp
+  src/SerialDevice.cpp
+  src/state_machine_wo_qt.cpp #Optoforce file, replaced QT dependence
+  src/optoforce_parameters.cpp
+  )
+
+SET_TARGET_PROPERTIES(optoforceInterface PROPERTIES LINKER_LANGUAGE CXX)
+
+target_link_libraries(optoforceInterface
+  pthread rt SM m boost_system boost_thread pthread #udev
+)

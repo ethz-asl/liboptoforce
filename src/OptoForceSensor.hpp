@@ -96,9 +96,24 @@ public:
 
 		if(packs.size()>0) {
 			sp::display_package& current_value = packs.back();
+
+			/*
+			  //Depricated:
 			readings_xyz_raw[0] = current_value.s1-current_value.s3;
 			readings_xyz_raw[1] = current_value.s4-current_value.s2;
 			readings_xyz_raw[2] = (current_value.s1+current_value.s2+current_value.s3+current_value.s4)/4;
+			
+			readings_xyz_raw[0] = current_value.s1c-current_value.s3c;
+			readings_xyz_raw[1] = current_value.s4c-current_value.s2c;
+			readings_xyz_raw[2] = (current_value.s1c+current_value.s2c+current_value.s3c+current_value.s4c)/4;
+			*/
+			//			cout << "Size: "  << packs.size() << endl;
+			
+			readings_xyz_raw[0] = current_value.x;
+			readings_xyz_raw[1] = current_value.y;
+			readings_xyz_raw[2] = current_value.z;
+			
+			
 
 			for(int i=0;i<3;i++){
 				readings_xyz_calibrated[i] = (int) ( optoforce_prop_const * (float)(readings_xyz_raw[i] - readings_xyz_offset[i]) );
@@ -142,9 +157,9 @@ public:
 
 			cout << "OptoForceSensor> Storing value nr " << j << endl;
 
-						if (!state_machine_->is_open()) {
-							init();
-						}
+			//			if (!state_machine_->is_open()) {
+			//				init();
+			//			}
 			update();
 
 			//Don't count the initial readings, when only zeros are transmitted:
