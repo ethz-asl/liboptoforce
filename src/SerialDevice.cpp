@@ -68,6 +68,7 @@ void  SerialDevice::read_complete(const boost::system::error_code& error, size_t
 	{ // read completed, so process the data
 
 		//Add Null-Char to allow for strlen
+	  //Dangerous. Null-Char is used in the new protocol (>API 1.1)
 		if(bytes_transferred<max_read_length){
 			read_msg_[bytes_transferred+1] = '\0';
 		}
@@ -77,9 +78,9 @@ void  SerialDevice::read_complete(const boost::system::error_code& error, size_t
 
 		//Copy the data:
 		read_msg_size_ = (unsigned int) bytes_transferred;
-		std::strcpy(read_msg_complete_, read_msg_);
+		memcpy(read_msg_complete_, read_msg_, read_msg_size_);
 
-		//memset(&read_msg_[0], 0, sizeof(read_msg_)); //Clear the read buffer
+		memset(&read_msg_[0], 0, sizeof(read_msg_)); //Clear the read buffer
 		read_start(); // start waiting for another asynchronous read again
 	}
 	else
