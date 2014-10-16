@@ -13,7 +13,7 @@
 class ForceSensorBase{
 public:
   ForceSensorBase();
-  ~ForceSensorBase();
+  virtual ~ForceSensorBase();
   std::string name(); //Returns the name of the sensor
 
   virtual void init() = 0;
