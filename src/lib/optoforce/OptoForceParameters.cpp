@@ -1,5 +1,4 @@
-
-#include"optoforce_parameters.h"
+#include"OptoForceParameters.hpp"
 
 const char* ifaces_USB[NR_FORCE_SENSORS] = { "/dev/ttyACM0", "/dev/ttyACM1","/dev/ttyACM2","/dev/ttyACM3" };
 const unsigned int baudrate = 115200;
