@@ -1,3 +1,10 @@
+liboptoforce (0.2-11) unstable; urgency=low
+
+  * Largely re-implemented library and utilities
+  * Increased minor version
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 28 Nov 2014 09:32:00 +0100
+ 
 liboptoforce (0.1-10) unstable; urgency=low
 
   * First build system configuration and code cleanups

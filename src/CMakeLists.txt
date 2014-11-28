@@ -1,6 +1,6 @@
 remake_find_package(
   Boost REQUIRED
-  COMPONENTS system thread
+  COMPONENTS system thread signals chrono program_options
   RESULT_VAR Boost_FOUND
 )
 

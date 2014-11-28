@@ -1,116 +1,114 @@
-#ifndef STATEMACHINE_HPP
-#define STATEMACHINE_HPP
+#ifndef OPTOFORCE_STATEMACHINE_HPP
+#define OPTOFORCE_STATEMACHINE_HPP
 
 /* 2013/mh: Adapted the original file from Optoforce :
  * - Removed the QT stuff
  * - Added functionality to configure the sampling frequency and the filter
  *
  * 2014/mh: Adapted to new version of the optoforce API (API 1.1)
- *  - Added enums for state_machine-type
-
+ * - Added enums for state_machine-type
  */
 
-#include <boost/asio.hpp>
-#include <boost/asio/serial_port.hpp>
+#include <deque>
+#include <cstdint>
 
 #include <optoforce/SerialDevice.hpp>
-#include <optoforce/DisplayPackage.hpp>
+#include <optoforce/SensorPackage.hpp>
 
-enum version {
-  _66, _67, _68
-};
+namespace optoforce {
+  /** The finite state machine (API version < 1.1):
+    *
+    \verbatim
+    ,--------------------,       byte == 55        ,---------------------,
+    |  first check byte  | ----------------------> |  second check byte  |----,
+    `--------------------`                         `---------------------`    |
+        ^               |                                  |   |              |
+        |  byte != 55   |        byte != 66 or 67          |   | byte == 66   |
+        `---------------' <--------------------------------`   |              |
+                                                               |              | byte == 67
+                                                               |              |
+                    .66 version processing <-------------------`              |
+                       * x, y, z coors                                        |
+                                                 .67 version processing <-----`
+                                                     * x, y, z coords
+                                                     * temperature
+                                                     * checksum
+    \endverbatim
+    *
+    */  
+  class StateMachine {
+  public:
+    /* States */
+    enum State {
+      /* Check states (all versions) */
+      state_XX_CheckH, state_XX_CheckL,
 
-/* The fsm (v < 1.1):
- * --------
- *
- *
- *
- *   ,--------------------,       byte == 55        ,---------------------,
- *   |  first check byte  | ----------------------> |  second check byte  |----,
- *   `--------------------`                         `---------------------`    |
- *       ^               |                                  |   |              |
- *       |  byte != 55   |        byte != 66 or 67          |   | byte == 66   |
- *       `---------------' <--------------------------------`   |              |
- *                                                              |              | byte == 67
- *                                                              |              |
- *                   .66 version processing <-------------------`              |
- *                      * x, y, z coors                                        |
- *                                                .67 version processing <-----`
- *                                                   * x, y, z coords
- *                                                   * temperature
- *                                                   * checksum
- *
- */
+      /* .66 version states */
+      state_66_Start, state_66_S1H, state_66_S1L, state_66_S2H, state_66_S2L,
+      state_66_S3H, state_66_S3L, state_66_S4H, state_66_S4L,
 
-class StateMachine {
-  private:
-  enum fsm_state {
-    /* Check states */
-    first_check, second_check,
-
-    /* .66 Version states */
-    _66_Start, _66_S1H, _66_S1L, _66_S2H, _66_S2L, _66_S3H, _66_S3L, _66_S4H,
-    _66_S4L,
-
-    /* .67 Version states */
-    _67_Start, _67_Config, _67_I1H, _67_I1L, _67_I2H, _67_I2L, _67_I3H,
-    _67_I3L, _67_I4H, _67_I4L, _67_TH, _67_TL, _67_Checksum,
+      /* .67 version states */
+      state_67_Start, state_67_Config, state_67_I1H, state_67_I1L,
+      state_67_I2H, state_67_I2L, state_67_I3H, state_67_I3L, state_67_I4H,
+      state_67_I4L, state_67_TH, state_67_TL, state_67_Checksum,
+      
+      /* .68 version states */
+      state_68_Start, state_68_Config, state_68_FXH, state_68_FXL,
+      state_68_FYH, state_68_FYL, state_68_FZH, state_68_FZL, state_68_S1H, 
+      state_68_S1L, state_68_S2H, state_68_S2L, state_68_S3H, state_68_S3L,
+      state_68_S4H, state_68_S4L, state_68_S1TH, state_68_S1TL, state_68_S2TH,
+      state_68_S2TL, state_68_S3TH, state_68_S3TL, state_68_S4TH,
+      state_68_S4TL, state_68_TH, state_68_TL, state_68_ChecksumH,
+      state_68_ChecksumL,
+      
+      /* .94 version states */
+      state_94_Start, state_94_Config, state_94_I1H, state_94_I1L,
+      state_94_I2H, state_94_I2L, state_94_I3H, state_94_I3L, state_94_I4H, 
+      state_94_I4L, state_94_S1TH, state_94_S1TL, state_94_I5H, state_94_I5L,
+      state_94_I6H, state_94_I6L, state_94_I7H, state_94_I7L, state_94_I8H,
+      state_94_I8L, state_94_S2TL, state_94_S2TH, state_94_I9H, state_94_I9L,
+      state_94_I10H, state_94_I10L, state_94_I11H, state_94_I11L,
+      state_94_I12H, state_94_I12L, state_94_S3TH, state_94_S3TL,
+      state_94_I13H, state_94_I13L, state_94_I14H, state_94_I14L,
+      state_94_I15H, state_94_I15L, state_94_I16H, state_94_I16L,
+      state_94_S4TH, state_94_S4TL, state_94_Checksum
+    };
     
-    /* .68 Version states */
-    _68_Start, _68_Config, _68_FXH, _68_FXL, _68_FYH, _68_FYL, _68_FZH,
-    _68_FZL, _68_S1H, _68_S1L, _68_S2H, _68_S2L, _68_S3H, _68_S3L, _68_S4H,
-    _68_S4L, _68_S1TH, _68_S1TL, _68_S2TH, _68_S2TL, _68_S3TH, _68_S3TL,
-    _68_S4TH, _68_S4TL, _68_TH, _68_TL, _68_ChecksumH, _68_ChecksumL,
+    StateMachine();
+    StateMachine(const StateMachine& src);
+    ~StateMachine();
+
+    inline void setCurrentState(State state) {
+      currentState = state;
+    };
     
-    /* .94 Version states */
-    _94_Start, _94_Config, _94_I1H, _94_I1L, _94_I2H, _94_I2L, _94_I3H,
-    _94_I3L, _94_I4H, _94_I4L, _94_S1TH, _94_S1TL, _94_I5H, _94_I5L, _94_I6H,
-    _94_I6L, _94_I7H, _94_I7L, _94_I8H, _94_I8L, _94_S2TL, _94_S2TH, _94_I9H,
-    _94_I9L, _94_I10H, _94_I10L, _94_I11H, _94_I11L, _94_I12H, _94_I12L,
-    _94_S3TH, _94_S3TL, _94_I13H, _94_I13L, _94_I14H, _94_I14L, _94_I15H,
-    _94_I15L, _94_I16H, _94_I16L, _94_S4TH, _94_S4TL, _94_Checksum
+    inline State getCurrentState() const {
+      return currentState;
+    };
+
+    StateMachine& operator=(const StateMachine& src);
+    
+    /* Process data */
+    size_t process(const std::vector<unsigned char>& data, int64_t
+      timestamp, std::deque<SensorPackage>& packages);
+    
+    /* Restart state machine */
+    void restart();    
+  protected:
+    /* Current state */
+    State currentState;
+    
+    /* Current package */
+    SensorPackage currentPackage;
+    
+    /* Current value */
+    unsigned short currentValue;
+    
+    /* Current checksum byte */
+    unsigned short currentChecksumByte;
+    /* Current checksum word */
+    unsigned short currentChecksumWord;
   };
-  
-  /* current state */
-  int state;
-
-  /* current character in processing */
-  uint8_t c;
-
-  /* first valid input -> signal first_valid_read () */
-  bool first_valid;
-
-  /* OMD version */
-  version vs;
-
-  /*Serial stuff, mh */
-  boost::asio::io_service io_service_;
-  unsigned int baudrate_;  //Baudrate in [Bits per second];
-  std::string device_;
-  SerialDevice * serialDevice_;    
-public:
-    /* constructor */
-    StateMachine ();
-
-    /* try open a port with portname */
-    bool open (std::string device, int baudrate);
-
-    /* close the port */
-    void close ();
-
-    bool is_open ();
-
-    /* read and processing all data from input */
-    void read(std::deque<sp::DisplayPackage>& packs, const sp::DisplayPackage&
-      offset);
-
-    /* Added by markho@ethz.ch to allow for configuration of the sensor
-    // possible values: frequency_hz_sampling: 1000, 333, 100, 10
-    //  frequency_hz_filter:  0 (no filter - default), 150, 50, 15
-    // Raw == 1: Raw data streaming (default), Raw == 0: Force (not working?) 
-    */
-    int write_configuration(int frequency_hz_sampling, int frequency_hz_filter,
-      int flag_raw);
 };
 
-#endif // STATEMACHINE_HPP
+#endif // OPTOFORCE_STATEMACHINE_HPP

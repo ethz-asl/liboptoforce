@@ -1,121 +1,226 @@
+/******************************************************************************
+ * Copyright (C) 2014 by Ralf Kaestner                                        *
+ * ralf.kaestner@gmail.com                                                    *
+ *                                                                            *
+ * This program is free software; you can redistribute it and/or modify       *
+ * it under the terms of the Lesser GNU General Public License as published by*
+ * the Free Software Foundation; either version 3 of the License, or          *
+ * (at your option) any later version.                                        *
+ *                                                                            *
+ * This program is distributed in the hope that it will be useful,            *
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of             *
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the               *
+ * Lesser GNU General Public License for more details.                        *
+ *                                                                            *
+ * You should have received a copy of the Lesser GNU General Public License   *
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
+ ******************************************************************************/
+
 #include "SerialDevice.hpp"
 
-using namespace std;
+#include <boost/bind.hpp>
+#include <boost/chrono.hpp>
 
-SerialDevice::SerialDevice(boost::asio::io_service& io_service, unsigned int
-    baud, const string& device) :
-  active_(true),
-  io_service_(io_service),
-  serialPort(io_service, device) {
-  cout << "Opening the serial port" << endl;
-  if (!serialPort.is_open())   {
-    cerr << "SerialDevice::Failed to open serial port\n";
-    return;
-  }
-  boost::asio::serial_port_base::baud_rate baud_option(baud);
-  serialPort.set_option(baud_option); // set the baud rate after the port has been opened
-  read_start();
+namespace optoforce {
+  
+/*****************************************************************************/
+/* Constructors                                                              */
+/*****************************************************************************/
+  
+SerialDevice::SerialDevice(size_t readBufferSize) :
+  active(false),
+  port(service),
+  readBuffer(readBufferSize),
+  numRead(0),
+  numWritten(0) {
+}
+    
+SerialDevice::SerialDevice(const std::string& filename, unsigned int
+    baudRate, size_t readBufferSize) :
+  active(false),
+  port(service),
+  readBuffer(readBufferSize),
+  numRead(0),
+  numWritten(0) {
+  open(filename, baudRate);
 }
 
-// pass the write data to the do_write function via the io service in the other thread
-void SerialDevice::write(const char msg) {
-  io_service_.post(boost::bind(&SerialDevice::do_write, this, msg));
+/*****************************************************************************/
+/* Destructor                                                                */
+/*****************************************************************************/
+  
+SerialDevice::~SerialDevice() {
+  if (port.is_open())
+    close(true);
+}
+  
+/*****************************************************************************/
+/* Accessors                                                                 */
+/*****************************************************************************/
+  
+bool SerialDevice::isOpen() const {
+  return port.is_open();
 }
 
-// call the do_close function via the io service in the other thread
-void SerialDevice::close() {
-  io_service_.post(boost::bind(&SerialDevice::do_close, this, boost::system::error_code()));
+/*****************************************************************************/
+/* Methods                                                                   */
+/*****************************************************************************/
+  
+void SerialDevice::open(const std::string& filename, unsigned int baudRate) {
+  this->filename = filename;
+  port.open(filename);
+  
+  boost::asio::serial_port_base::baud_rate baudRateOption(baudRate);
+  // Set the baud rate after the port has been opened
+  port.set_option(baudRateOption);
+  
+  numRead = 0;
+  numWritten = 0;
+  error.clear();
+  
+  readStart();
+  
+  service.reset();
+  thread = boost::thread(
+    boost::bind(&boost::asio::io_service::run, &service));
+  active = true;
 }
 
-// return true if the socket is still active
-bool SerialDevice::active() {
-  return active_;
-}
-
-// Start an asynchronous read and call read_complete when it completes or fails
-void  SerialDevice::read_start(void) { 
-  try {
-    serialPort.async_read_some(boost::asio::buffer(read_msg_, max_read_length),
-      //Bind read_complete:
-      boost::bind(&SerialDevice::read_complete,
-          this,
-          boost::asio::placeholders::error,
-          boost::asio::placeholders::bytes_transferred));
-  }
-  catch(...) {
-  std::cerr <<"SerialDevice: Error at async_read_some " << std::endl;
-  }
-}
-
-// the asynchronous read operation has now completed or failed and returned an error
-void  SerialDevice::read_complete(const boost::system::error_code& error,
-    size_t bytes_transferred) { 
-  if (!error) { // read completed, so process the data
-    //Add Null-Char to allow for strlen
-    //Dangerous. Null-Char is used in the new protocol (>API 1.1)
-    if(bytes_transferred<max_read_length){
-      read_msg_[bytes_transferred+1] = '\0';
-    }
-    else {
-      read_msg_[max_read_length] = '\0';
-    }
-
-    //Copy the data:
-    read_msg_size_ = (unsigned int) bytes_transferred;
-    memcpy(read_msg_complete_, read_msg_, read_msg_size_);
-
-    memset(&read_msg_[0], 0, sizeof(read_msg_)); //Clear the read buffer
-    read_start(); // start waiting for another asynchronous read again
+// Call the doClose function via the io service in the other thread
+void SerialDevice::close(bool wait) {
+  if (wait) {
+    boost::unique_lock<boost::mutex> lock(closeMutex);
+    service.post(boost::bind(&SerialDevice::doClose, this,
+      boost::system::error_code()));
+    closeCondition.wait(lock);
   }
   else
-    do_close(error);
+    service.post(boost::bind(&SerialDevice::doClose, this,
+      boost::system::error_code()));
+}
+  
+boost::signals2::connection SerialDevice::connectOnReadComplete(const
+    OnReadComplete::slot_type& slot) {
+  return onReadComplete.connect(slot);
 }
 
-char * SerialDevice::return_read_data() {
-  return read_msg_complete_;
+// Pass the write data to the doWrite function via the io service in the
+// other thread
+void SerialDevice::write(unsigned char data) {
+  service.post(boost::bind(&SerialDevice::doWrite, this, data));
 }
 
-int SerialDevice::return_read_data_size(){
-  return read_msg_size_;
+// Pass the write data to the doWrite function via the io service in the
+// other thread
+void SerialDevice::write(const std::vector<unsigned char>& data) {
+  service.post(boost::bind(&SerialDevice::doWriteVector, this, data));
 }
 
-// callback to handle write call from outside this class
-void  SerialDevice::do_write(const char msg) { 
-  bool write_in_progress = !write_msgs_.empty(); // is there anything currently being written?
-  write_msgs_.push_back(msg); // store in write buffer
-  if (!write_in_progress) // if nothing is currently being written, then start
-    write_start();
+// Start an asynchronous read and call readComplete when it completes or
+// fail
+void  SerialDevice::readStart() { 
+  port.async_read_some(
+    boost::asio::buffer(readBuffer),
+    boost::bind(&SerialDevice::readComplete, this,
+      boost::asio::placeholders::error,
+      boost::asio::placeholders::bytes_transferred));
 }
 
-// Start an asynchronous write and call write_complete when it completes or fails
-void  SerialDevice::write_start(void) { 
-  boost::asio::async_write(serialPort,
-      boost::asio::buffer(&write_msgs_.front(), 1),
-      boost::bind(&SerialDevice::write_complete,
-          this,
-          boost::asio::placeholders::error));
-}
-
-// the asynchronous read operation has now completed or failed and returned an error
-void  SerialDevice::write_complete(const boost::system::error_code& error) {
-  // write completed, so send next write data
+// The asynchronous read operation has now completed or failed and returned
+// an error
+void SerialDevice::readComplete(const boost::system::error_code& error,
+    size_t numRead) {
   if (!error) {
-    write_msgs_.pop_front(); // remove the completed data
-    if (!write_msgs_.empty()) // if there is anthing left to be written
-      write_start(); // then start sending the next item in the buffer
+    // Create timestamp
+    boost::chrono::high_resolution_clock::time_point time =
+      boost::chrono::high_resolution_clock::now();
+    int64_t timestamp =
+      boost::chrono::duration_cast<boost::chrono::nanoseconds>(
+      time.time_since_epoch()).count();
+    
+    // Read completed, so copy the data
+    std::vector<unsigned char> readData(numRead);
+    std::copy(readBuffer.begin(), readBuffer.begin()+numRead,
+      readData.begin());
+    this->numRead += numRead;
+
+    // Signal read complete
+    onReadComplete(readData, timestamp);
+    
+    // Start waiting for another asynchronous read again
+    readStart(); 
   }
   else
-    do_close(error);
+    doClose(error);
 }
 
-void  SerialDevice::do_close(const boost::system::error_code& error) {
-  // if this call is the result of a timer cancel()
-  if (error == boost::asio::error::operation_aborted)
-    return; // ignore it because the connection cancelled the timer
-  if (error)
-    cerr << "Error: " << error.message() << endl; // show the error message
+// Callback to handle write call from outside this class
+void  SerialDevice::doWrite(unsigned char data) { 
+  // Is there anything currently being written?
+  bool writeInProgress = !writeBuffer.empty();
+  
+  // Store in write buffer
+  writeBuffer.push_back(data); 
+  
+  // If nothing is currently being written, then start
+  if (!writeInProgress)
+    writeStart();
+}
+
+// Callback to handle write call from outside this class
+void  SerialDevice::doWriteVector(std::vector<unsigned char> data) { 
+  // Is there anything currently being written?
+  bool writeInProgress = !writeBuffer.empty();
+
+  // Append data to be written
+  writeBuffer.insert(writeBuffer.end(), data.begin(), data.end());
+  
+  // If nothing is currently being written, then start
+  if (!writeInProgress)
+    writeStart();
+}
+
+// Start an asynchronous write and call writeComplete when it completes
+// or fails
+void  SerialDevice::writeStart() { 
+  boost::asio::async_write(port,
+    boost::asio::buffer(&writeBuffer.front(), 1),
+    boost::bind(&SerialDevice::writeComplete, this,
+      boost::asio::placeholders::error,
+      boost::asio::placeholders::bytes_transferred));
+}
+
+// The asynchronous read operation has now completed or failed and returned
+// an error
+void  SerialDevice::writeComplete(const boost::system::error_code& error,
+    size_t numWritten) {
+  // Write completed, so send next write data
+  if (!error) {
+    // Remove the completed data
+    writeBuffer.erase(writeBuffer.begin(), writeBuffer.begin()+numWritten);
+    this->numWritten += numWritten;
+    
+    // If there is anthing left to be written, then start sending the next
+    // item in the buffer
+    if (!writeBuffer.empty())
+      writeStart();
+  }
   else
-    cout << "SerialDevice:: Error: Connection did not succeed - closing the serial port.\n";
-  serialPort.close();
-  active_ = false;
+    doClose(error);
+}
+
+void  SerialDevice::doClose(const boost::system::error_code& error) {
+  // If this call is the result of a timer cancel()
+  if (error == boost::asio::error::operation_aborted)
+    // Ignore it because the connection cancelled the timer
+    return;
+  
+  port.close();
+  this->error = error;    
+  active = false;
+  
+  boost::lock_guard<boost::mutex> lock(closeMutex);
+  closeCondition.notify_all();
+}
+
 }
