@@ -70,10 +70,11 @@ int main(int argc, char *argv[]) {
 
   if (variables.count("help")) {
     std::cout <<
-      "Usage: optoforce-unbiased [options] dev1 [dev2 [...]]\n"
+      "Usage: optoforce-dump_readings [options] dev1 [dev2 [...]]\n"
       "\n"
-      "Acquire unbiased force readings from all OptoForce sensors connected\n"
-      "at the specified serial devices (usually /dev/ttyACM*).\n"
+      "Acquire force readings from all OptoForce sensors connected\n"
+      "at the specified serial devices (usually /dev/ttyACM*) and\n"
+      "print out their components for inspection.\n"
       "\n" <<
       description;
     return 0;

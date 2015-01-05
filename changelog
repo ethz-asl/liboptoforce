@@ -1,3 +1,11 @@
+liboptoforce (0.2-12) unstable; urgency=low
+
+  * Renamed packages executable and readings executable to dump_packages and
+    dump_readings due to target naming conflicts with ReMake
+  * Added API documentation
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Mon, 05 Jan 2015 18:54:00 +0100
+ 
 liboptoforce (0.2-11) unstable; urgency=low
 
   * Largely re-implemented library and utilities

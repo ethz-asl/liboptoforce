@@ -125,24 +125,6 @@ SensorConfig& SensorConfig::operator=(const SensorConfig& src) {
 /* Methods                                                                   */
 /*****************************************************************************/
 
-// void SensorConfig::fromByte(unsigned char byte) {
-//   mode = (Mode)(byte & 0x01);
-//   filter = (Filter)(byte & 0x06);
-//   speed = (Speed)(byte & 0x18);
-//   state = (State)(byte & 0xE0);
-// }
-// 
-// unsigned char SensorConfig::toByte() const {
-//   unsigned char byte = 0;
-//   
-//   byte |= mode;
-//   byte |= (filter << 1);
-//   byte |= (speed << 3);
-//   byte |= (state << 5);
-//   
-//   return byte;
-// }
-
 void SensorConfig::reset() {
   state = state_no_sensor;
   speed = speed_1000hz;

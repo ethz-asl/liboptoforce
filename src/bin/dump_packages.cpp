@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 
   if (variables.count("help")) {
     std::cout <<
-      "Usage: optoforce-packages [options] dev1 [dev2 [...]]\n"
+      "Usage: optoforce-dump_packages [options] dev1 [dev2 [...]]\n"
       "\n"
       "Acquire packages from all OptoForce sensors connected at the\n"
       "specified serial devices (usually /dev/ttyACM*) and print out\n"

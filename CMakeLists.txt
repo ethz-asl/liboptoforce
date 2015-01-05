@@ -7,8 +7,8 @@ remake_project(
   VERSION 0.2
   RELEASE beta
   SUMMARY "Driver library for OptoForce force sensing devices."
-  AUTHOR "Mark Hoepflinger"
   AUTHOR "Ralf Kaestner"
+  AUTHOR "Mark Hoepflinger"
   CONTACT "ralf.kaestner@gmail.com"
   HOME "http://github.com/ethz-asl/liboptoforce"
   LICENSE "GNU Lesser General Public License (LGPL)"
