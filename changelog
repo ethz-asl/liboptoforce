@@ -1,3 +1,15 @@
+liboptoforce (0.2-14) unstable; urgency=low
+
+  * Update changelog
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 06 Jan 2015 08:07:00 +0100
+ 
+liboptoforce (0.2-13) unstable; urgency=low
+
+  * Update README.md
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 06 Jan 2015 08:05:37 +0100
+ 
 liboptoforce (0.2-12) unstable; urgency=low
 
   * Renamed packages executable and readings executable to dump_packages and
