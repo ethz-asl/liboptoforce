@@ -1,3 +1,9 @@
+liboptoforce (0.2-15) unstable; urgency=low
+
+  * Updated README.md
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 27 Jan 2015 16:50:00 +0100
+ 
 liboptoforce (0.2-14) unstable; urgency=low
 
   * Update changelog
