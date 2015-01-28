@@ -117,7 +117,7 @@ project the CMake way. Assuming that you have cloned the project sources into
   make packages_install
   ```
 
-  (from package(s) on Debian-based Linux only) or 
+  (from packages on Debian-based Linux only) or 
 
   ```
   make install
