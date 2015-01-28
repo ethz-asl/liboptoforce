@@ -48,8 +48,9 @@ remake_distribute_deb(
   DISTRIBUTION precise
   SECTION libs
   UPLOAD ppa:kralf/asl
-  DEPENDS libboost-system-dev libboost-thread-dev libboost-signals-dev
-    libboost-chrono1.48-dev libboost-program-options-dev remake doxygen
+  DEPENDS libboost-system1.48-dev libboost-thread1.48-dev
+    libboost-signals1.48-dev libboost-chrono1.48-dev
+    libboost-program-options1.48-dev remake doxygen
     pkg-config
   PASS CMAKE_BUILD_TYPE LIBOPTOFORCE_GIT_REVISION
 )

@@ -1,3 +1,10 @@
+liboptoforce (0.2-20) unstable; urgency=low
+
+  * Adapted build dependencies for precise distribution to libboost
+    version 1.48 packages
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 28 Jan 2015 10:14:00 +0100
+ 
 liboptoforce (0.2-19) unstable; urgency=low
 
   * Removed lucid distribution due to lack of libboost-chrono
