@@ -1,3 +1,10 @@
+liboptoforce (0.2-24) unstable; urgency=low
+
+  * Added BOOST_PARAMETER_MAX_ARITY definition to prevent build failures
+    against libboost version 1.48
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 28 Jan 2015 10:57:00 +0100
+ 
 liboptoforce (0.2-23) unstable; urgency=low
 
   * Fixed boost lock_guard include for backwards-compatibility
