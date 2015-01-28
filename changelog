@@ -1,3 +1,9 @@
+liboptoforce (0.2-25) unstable; urgency=low
+
+  * Fixed inclusion order to account for BOOST_PARAMETER_MAX_ARITY definition
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 28 Jan 2015 11:16:00 +0100
+ 
 liboptoforce (0.2-24) unstable; urgency=low
 
   * Added BOOST_PARAMETER_MAX_ARITY definition to prevent build failures

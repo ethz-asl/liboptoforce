@@ -27,11 +27,11 @@
 #include <vector>
 #include <exception>
 
-#include <boost/exception/exception.hpp>
-#include <boost/concept_check.hpp>
-
 #include <optoforce/SensorConfig.hpp>
 #include <optoforce/SensorReading.hpp>
+
+#include <boost/exception/exception.hpp>
+#include <boost/concept_check.hpp>
 
 namespace optoforce {
   /** \brief Representation of an OptoForce sensor data package

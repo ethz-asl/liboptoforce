@@ -20,11 +20,11 @@
 #include <string>
 #include <iostream>
 
+#include <optoforce/Sensor.hpp>
+
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/program_options.hpp>
 #include <boost/chrono.hpp>
-
-#include <optoforce/Sensor.hpp>
 
 using namespace optoforce;
 

@@ -27,17 +27,17 @@
 #include <cstdint>
 #include <exception>
 
+#include <optoforce/SerialDevice.hpp>
+#include <optoforce/StateMachine.hpp>
+#include <optoforce/SensorPackage.hpp>
+#include <optoforce/SensorReading.hpp>
+
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/exception/exception.hpp>
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
-
-#include <optoforce/SerialDevice.hpp>
-#include <optoforce/StateMachine.hpp>
-#include <optoforce/SensorPackage.hpp>
-#include <optoforce/SensorReading.hpp>
 
 namespace optoforce {
   /** \brief Implementation of the OptoForce sensor

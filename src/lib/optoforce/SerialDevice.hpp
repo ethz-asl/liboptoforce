@@ -28,13 +28,14 @@
 #include <string>
 #include <cstdint>
 
+#if BOOST_PARAMETER_MAX_ARITY < 7
+#define BOOST_PARAMETER_MAX_ARITY 7
+#endif
+
 #include <boost/asio.hpp>
 #include <boost/asio/serial_port.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
-
-#define BOOST_PARAMETER_MAX_ARITY 7
-
 #include <boost/signals2.hpp>
 
 namespace optoforce {
