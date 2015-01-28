@@ -24,14 +24,14 @@ remake_doc(
 )
 
 remake_pack_deb(
-  DEPENDS libboost-system[0-9.]* libboost-thread[0-9.]* 
+  DEPENDS libboost-system[0-9.]* libboost-thread[0-9.]*
     libboost-signals[0-9.]* libboost-chrono[0-9.]*
 )
 remake_pack_deb(
   COMPONENT dev
   DESCRIPTION "development headers"
-  DEPENDS liboptoforce libboost-system-dev libboost-thread-dev
-    libboost-signals-dev
+  DEPENDS liboptoforce libboost-system[0-9.]*-dev libboost-thread[0-9.]*-dev
+    libboost-signals[0-9.]*-dev
 )
 remake_pack_deb(
   COMPONENT utils
