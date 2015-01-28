@@ -47,7 +47,7 @@ remake_pack_deb(
 remake_distribute_deb(
   DISTRIBUTION lucid
   SECTION libs
-  UPLOAD ppa:ethz-asl/common
+  UPLOAD ppa:kralf/asl
   DEPENDS libboost-system-dev libboost-thread-dev libboost-signals-dev
     libboost-chrono-dev libboost-program-options-dev remake doxygen
     pkg-config
@@ -56,7 +56,7 @@ remake_distribute_deb(
 remake_distribute_deb(
   DISTRIBUTION precise
   SECTION libs
-  UPLOAD ppa:ethz-asl/common
+  UPLOAD ppa:kralf/asl
   DEPENDS libboost-system-dev libboost-thread-dev libboost-signals-dev
     libboost-chrono-dev libboost-program-options-dev remake doxygen
     pkg-config
@@ -65,7 +65,7 @@ remake_distribute_deb(
 remake_distribute_deb(
   DISTRIBUTION trusty
   SECTION libs
-  UPLOAD ppa:ethz-asl/common
+  UPLOAD ppa:kralf/asl
   DEPENDS libboost-system-dev libboost-thread-dev libboost-signals-dev
     libboost-chrono-dev libboost-program-options-dev remake doxygen
     pkg-config
