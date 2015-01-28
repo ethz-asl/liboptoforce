@@ -45,20 +45,11 @@ remake_pack_deb(
 )
 
 remake_distribute_deb(
-  DISTRIBUTION lucid
-  SECTION libs
-  UPLOAD ppa:kralf/asl
-  DEPENDS libboost-system-dev libboost-thread-dev libboost-signals-dev
-    libboost-chrono-dev libboost-program-options-dev remake doxygen
-    pkg-config
-  PASS CMAKE_BUILD_TYPE LIBOPTOFORCE_GIT_REVISION
-)
-remake_distribute_deb(
   DISTRIBUTION precise
   SECTION libs
   UPLOAD ppa:kralf/asl
   DEPENDS libboost-system-dev libboost-thread-dev libboost-signals-dev
-    libboost-chrono-dev libboost-program-options-dev remake doxygen
+    libboost-chrono1.48-dev libboost-program-options-dev remake doxygen
     pkg-config
   PASS CMAKE_BUILD_TYPE LIBOPTOFORCE_GIT_REVISION
 )

@@ -1,3 +1,10 @@
+liboptoforce (0.2-19) unstable; urgency=low
+
+  * Removed lucid distribution due to lack of libboost-chrono
+  * Adapted build dependencies for precise distribution
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 28 Jan 2015 10:06:00 +0100
+ 
 liboptoforce (0.2-18) unstable; urgency=low
 
   * Changed PPA
