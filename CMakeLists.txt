@@ -30,8 +30,10 @@ remake_pack_deb(
 remake_pack_deb(
   COMPONENT dev
   DESCRIPTION "development headers"
-  DEPENDS liboptoforce libboost-system[0-9.]*-dev libboost-thread[0-9.]*-dev
-    libboost-signals[0-9.]*-dev
+  DEPENDS liboptoforce
+    libboost-system-dev|libboost-system1.48-dev
+    libboost-thread-dev|libboost-thread1.48-dev
+    libboost-signals-dev|libboost-signals1.48-dev
 )
 remake_pack_deb(
   COMPONENT utils
