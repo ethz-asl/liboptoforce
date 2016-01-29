@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>liboptoforce</name>
+  <version>0.0.0</version>
+  <description>The liboptoforce package</description>
+    <maintainer email="ralf.kaestner@gmail.com">Ralf Kaestner</maintainer>
+  <license>BSD</license>
+  <url type="website">http://github.com/ethz-asl/liboptoforce</url> 
+  <author email="ralf.kaestner@gmail.com">Ralf Kaestner</author>
+  <author email="gehrinch@ethz.ch">Christian Gehring</author>
+  <author>Mark Hoepflinger</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>
