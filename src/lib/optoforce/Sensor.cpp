@@ -31,7 +31,8 @@ Sensor::Sensor(size_t packageBufferSize, double signalToForceFactor) :
   signalToForceFactor(signalToForceFactor),
   numReceivedPackages(0),
   numDroppedPackages(0),
-  numCalibrationReadings(0) {
+  numCalibrationReadings(0),
+  alpha(1.0) {
   serialDevice.connectOnReadComplete(
     boost::bind(&Sensor::processReadData, this, _1, _2));
 }
@@ -196,18 +197,24 @@ void Sensor::processReadData(const std::vector<unsigned char>& data,
         if (it->hasCompensatedSignals()) {
           it->toCompensatedReading(reading, signalToForceFactor);
           compensatedZeroWeightAccumulator(reading);
+          if (computeMahalanobisDistance(zeroWeightOffset, reading) > mahalanobisDistance) {
+            this->numCalibrationReadings = 0;
+          }
         }
 
         it->toReading(reading, signalToForceFactor);
         zeroWeightAccumulator(reading);
+        if (computeMahalanobisDistance(compensatedZeroWeightOffset, reading) > mahalanobisDistance) {
+          this->numCalibrationReadings = 0;
+        }
       }
 
       if (this->numCalibrationReadings == numCalibrationReadings) {
-        zeroWeightOffset = boost::accumulators::mean(
-          zeroWeightAccumulator);
-        compensatedZeroWeightOffset = boost::accumulators::mean(
-          compensatedZeroWeightAccumulator);
-        
+        SensorReading newZeroWeightOffset = boost::accumulators::mean(zeroWeightAccumulator);
+        SensorReading newCompensatedZeroWeightOffset = boost::accumulators::mean(compensatedZeroWeightAccumulator);
+        zeroWeightOffset = zeroWeightOffset*(1.0-alpha) + newZeroWeightOffset*alpha;
+        compensatedZeroWeightOffset = compensatedZeroWeightOffset*(1.0-alpha) + newCompensatedZeroWeightOffset*alpha;
+
         this->numCalibrationReadings = 0;
       }
     }
@@ -217,6 +224,22 @@ void Sensor::processReadData(const std::vector<unsigned char>& data,
       ++numDroppedPackages;
     }
   }
+}
+
+void Sensor::setAlphaOffsetFilter(double al) {
+  alpha = al;
+}
+void Sensor::setForceVariance(const SensorReading& var) {
+  variance = var;
+}
+
+double Sensor::computeMahalanobisDistance(const SensorReading& mean, const SensorReading& sample)
+{
+  SensorReading error = sample-mean;
+
+  return std::sqrt(error.getForceX()*error.getForceX()/variance.getForceX() +
+      error.getForceY()*error.getForceY()/variance.getForceY() +
+      error.getForceZ()*error.getForceZ()/variance.getForceZ());
 }
 
 }

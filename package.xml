@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>liboptoforce</name>
+  <name>optoforce</name>
   <version>0.0.0</version>
   <description>The liboptoforce package</description>
     <maintainer email="ralf.kaestner@gmail.com">Ralf Kaestner</maintainer>

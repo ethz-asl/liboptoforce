@@ -1,12 +1,21 @@
 cmake_minimum_required(VERSION 2.6)
-project(liboptoforce)
+project(optoforce)
 
 add_definitions(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS)
+find_package(Boost REQUIRED COMPONENTS chrono)
 
-include_directories(src/lib/optoforce)
+catkin_package(
+  INCLUDE_DIRS src/lib 
+  LIBRARIES optoforce
+  CATKIN_DEPENDS
+  DEPENDS boost
+  )
+
+include_directories(src/lib)
 include_directories(${catkin_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIRS})
 
 add_library(optoforce
   src/lib/optoforce/Sensor.cpp
@@ -19,5 +28,6 @@ add_library(optoforce
 
 target_link_libraries(optoforce
    ${catkin_LIBRARIES}
+   ${Boost_LIBRARIES}
 )
 

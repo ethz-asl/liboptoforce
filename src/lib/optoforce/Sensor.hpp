@@ -51,7 +51,7 @@ namespace optoforce {
   public:
     /** \brief Enumerable indicating package buffer positions
       */
-    enum BufferPosition {\
+    enum BufferPosition {
       /** Least recent package in buffer
         */
       buffer_position_oldest,
@@ -380,6 +380,14 @@ namespace optoforce {
       */
     void clearPackages();
     
+
+    void setAlphaOffsetFilter(double alpha);
+    void setForceVariance(const SensorReading& var);
+    void setMahalanobisDistance(double distance) {
+      mahalanobisDistance = distance;
+    };
+    double computeMahalanobisDistance(const SensorReading& mean, const SensorReading& sample);
+
   protected:
     /** \brief The sensor's associated serial communication device
       */
@@ -413,6 +421,11 @@ namespace optoforce {
       */
     SensorReading compensatedZeroWeightOffset;
     
+    SensorReading variance;
+
+    double alpha;
+    double mahalanobisDistance;
+
     /** \brief The sensor's zero-weight accumulator
       * 
       * This mean accumulator determines the sensor's zero-weight offset
